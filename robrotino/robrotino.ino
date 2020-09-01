@@ -89,13 +89,21 @@ void loop() {
   static uint8_t buffer48x48[288]; // 48*48/8
   static Dir dir = SPIFFS.openDir("/");
 
-  if(millis()-chrono > 1000) {
+  static uint8_t frame = 0;
+  static uint8_t robrotim = 0;
+
+  if(millis()-chrono > 500) {
     chrono = millis();
 
-    if(!dir.next())
-      dir = SPIFFS.openDir("/");
+    String filename = "/";
+    filename = filename + (robrotim?"gengibre":"nabo") + "/" + frame + ".bin";
+    Serial.println(filename);
     
-    File file = SPIFFS.open(dir.fileName(), "r");
+    File file = SPIFFS.open(filename, "r");
+    ++frame %= 4;
+    if(frame==0)
+      ++robrotim %= 2;
+    
     if(!file)
       Serial.print("can't open ");
     else {
