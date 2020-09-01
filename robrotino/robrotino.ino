@@ -6,16 +6,6 @@
 #include <WiFiManager.h>
 #include <FS.h>
 
-// Software SPI (slower updates, more flexible pin options):
-// pin 7 - Serial clock out (SCLK)
-// pin 6 - Serial data out (DIN)
-// pin 5 - Data/Command select (D/C)
-// pin 4 - LCD chip select (CS)
-// pin 3 - LCD reset (RST)
-//Adafruit_PCD8544 display = Adafruit_PCD8544(7, 6, 5, 4, 3);
-
-Adafruit_PCD8544 display = Adafruit_PCD8544(D5, D7, D6, D1, D2);
-
 static const unsigned char PROGMEM nabo[] =
 { B00000000,B00000000,B00000000,B00000000,B00000000,B11000001,B10000000,B00000000,B00000000,B00000000,
   B00000000,B00000000,B00000000,B00000000,B00000000,B11100111,B10000000,B00000000,B00000000,B00000000,
@@ -66,45 +56,55 @@ static const unsigned char PROGMEM nabo[] =
   B00000000,B00000010,B00010000,B11000110,B00000000,B00000000,B00000000,B00000000,B00000000,B11000000,
   B00000000,B00001110,B00010000,B11000111,B00000000,B00000000,B00000000,B00000000,B00000000,B10000000 };
 
-  
+//                                          CLK DIN DC  CE  RST
+Adafruit_PCD8544 display = Adafruit_PCD8544(D5, D7, D6, D1, D2);
+
 void setup() {
-  Serial.begin(9600);
-  Serial.println("hello");
-  WiFiManager wifiManager;
-  wifiManager.autoConnect("nabo", "robrota1");
-  ArduinoOTA.begin();
-  SPIFFS.begin();
-  
   display.begin();
   display.setContrast(50);
   display.clearDisplay();
   display.drawBitmap(0, 0,  nabo, 80, 48, 1);
   display.display();
+  
+  Serial.begin(115200);
+  Serial.println("hello");
+  WiFiManager wifiManager;
+  wifiManager.autoConnect("nabo", "robrota1");
+  ArduinoOTA.begin();
+  SPIFFS.begin();
 
-  Serial.println("openDir");
+  Serial.println("all files:");
   Dir dir = SPIFFS.openDir("/");
   while(dir.next()) {
+    Serial.print(dir.fileSize());
+    Serial.print("\t");
     Serial.println(dir.fileName());
-    Serial.println(dir.fileSize());
   }
-  
-  uint8_t buffer48x48[288]; // 48*48/8
-  Serial.println("open File");
-  File file0 = SPIFFS.open("/2-48x48.bin", "r");
-  if(!file0) {
-    Serial.println("falha em abrir o arquivo");
-  } else { 
-    Serial.println(file0);
-    delay(500);
-    display.clearDisplay();
-    file0.readBytes((char*)buffer48x48, 288);
-    display.drawBitmap(18, 0,  buffer48x48, 48, 48, 1);
-    display.display();
-  }
-  
   Serial.println("end setup");
 }
 
 void loop() {
   ArduinoOTA.handle();
+  static uint32_t chrono = millis();
+  static uint8_t buffer48x48[288]; // 48*48/8
+  static Dir dir = SPIFFS.openDir("/");
+
+  if(millis()-chrono > 1000) {
+    chrono = millis();
+
+    if(!dir.next())
+      dir = SPIFFS.openDir("/");
+    
+    File file = SPIFFS.open(dir.fileName(), "r");
+    if(!file)
+      Serial.print("can't open ");
+    else {
+      Serial.print("opened ");
+      display.clearDisplay();
+      file.readBytes((char*)buffer48x48, 288);
+      display.drawBitmap(18, 0, buffer48x48, 48, 48, 1);
+      display.display();
+    }
+    Serial.println(dir.fileName());
+  }
 }
