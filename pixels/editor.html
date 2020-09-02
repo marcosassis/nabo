@@ -1,0 +1,40 @@
+<style>
+#c{
+width: 75vw;
+image-rendering: -moz-crisp-edges;
+image-rendering: -webkit-crisp-edges;
+image-rendering: pixelated;
+image-rendering: crisp-edges;
+}
+</style>
+<canvas id=c width="84" height="48"></canvas>
+<p></p>
+<input type="file" id="fileInput"/>
+<script type="text/javascript">
+var fileInput = document.getElementById('fileInput');
+fileInput.addEventListener('change', handleImage, false);
+var c = document.getElementById('c');
+var x = c.getContext('2d');
+
+var img = new Image();
+img.onload = function(){
+    c.width = img.width;
+    c.height = img.height;
+    x.drawImage(img,0,0);
+}
+img.src = "templates/84x48.png";
+
+function handleImage(e){
+    var reader = new FileReader();
+    reader.onload = function(event){
+        var img = new Image();
+        img.onload = function(){
+            c.width = img.width;
+            c.height = img.height;
+            x.drawImage(img,0,0);
+        }
+        img.src = event.target.result;
+    }
+    reader.readAsDataURL(e.target.files[0]);     
+}
+</script>
