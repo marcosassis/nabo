@@ -92,17 +92,17 @@ void loop() {
   static uint8_t frame = 0;
   static uint8_t robrotim = 0;
 
-  if(millis()-chrono > 500) {
+  if(millis()-chrono > 1000) {
     chrono = millis();
 
     String filename = "/";
-    filename = filename + (robrotim?"gengibre":"nabo") + "/" + frame + ".bin";
+    filename = filename + (robrotim?robrotim-1?"margarida":"gengibre":"nabo") + "/" + frame + ".bin";
     Serial.println(filename);
     
     File file = SPIFFS.open(filename, "r");
     ++frame %= 4;
     if(frame==0)
-      ++robrotim %= 2;
+      ++robrotim %= 3;
     
     if(!file)
       Serial.print("can't open ");
