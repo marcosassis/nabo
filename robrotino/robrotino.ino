@@ -1,12 +1,9 @@
-#include <SPI.h>
-#include <Adafruit_GFX.h>
+#include "nabo_server.h"
 #include <Adafruit_PCD8544.h>
-#include <ESP8266WiFi.h>
-#include <ArduinoOTA.h>
-#include <WiFiManager.h>
-#include <FS.h>
 
-static const unsigned char PROGMEM nabo[] =
+using namespace nabo;
+
+static const unsigned char PROGMEM splash[] =
 { B00000000,B00000000,B00000000,B00000000,B00000000,B11000001,B10000000,B00000000,B00000000,B00000000,
   B00000000,B00000000,B00000000,B00000000,B00000000,B11100111,B10000000,B00000000,B00000000,B00000000,
   B00000000,B00000000,B00000000,B00000000,B00000000,B10111101,B10000000,B00000000,B00000000,B00000000,
@@ -63,15 +60,10 @@ void setup() {
   display.begin();
   display.setContrast(50);
   display.clearDisplay();
-  display.drawBitmap(0, 0,  nabo, 80, 48, 1);
+  display.drawBitmap(0, 0, splash, 80, 48, 1);
   display.display();
-  
-  Serial.begin(115200);
-  Serial.println("hello");
-  WiFiManager wifiManager;
-  wifiManager.autoConnect("nabo", "robrota1");
-  ArduinoOTA.begin();
-  SPIFFS.begin();
+
+  nabo_server::setup();
 
   Serial.println("all files:");
   Dir dir = SPIFFS.openDir("/");
@@ -84,10 +76,10 @@ void setup() {
 }
 
 void loop() {
-  ArduinoOTA.handle();
+  nabo_server::loop();
+  
   static uint32_t chrono = millis();
   static uint8_t buffer48x48[288]; // 48*48/8
-  static Dir dir = SPIFFS.openDir("/");
 
   static uint8_t frame = 0;
   static uint8_t robrotim = 0;
@@ -113,6 +105,5 @@ void loop() {
       display.drawBitmap(18, 0, buffer48x48, 48, 48, 1);
       display.display();
     }
-    Serial.println(dir.fileName());
   }
 }
