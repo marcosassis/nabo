@@ -30,7 +30,10 @@ D.onclick=e=>{
 L.setAttribute('href',c.toDataURL(""))
 L.click()
 }
-c.onclick=e=>{
+xx=yy=-1
+c.onmousedown=c.onmousemove=e=>{
+E=e
+if(!e.buttons)return
 r=c.getBoundingClientRect()
 X=e.x-r.left
 X*=c.width/c.offsetWidth
@@ -38,8 +41,11 @@ X|=0
 Y=e.y-r.top
 Y*=c.height/c.offsetHeight
 Y|=0
+if(xx==X&&yy==Y)return
 D=x.getImageData(X,Y,1,1)
 for(i=3;i--;)D.data[i]^=255
 x.putImageData(D,X,Y)
+xx=X
+yy=Y
 }
 </script>
