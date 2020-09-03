@@ -57,6 +57,7 @@ static const unsigned char PROGMEM splash[] =
 Adafruit_PCD8544 display = Adafruit_PCD8544(D5, D7, D6, D1, D2);
 
 void setup() {
+  Serial.println("hello");
   display.begin();
   display.setContrast(50);
   display.clearDisplay();

@@ -8,6 +8,7 @@
 #include <WiFiManager.h>
 #include <ArduinoOTA.h>
 #include <FS.h>
+#include <WebSocketsServer.h>
 
 namespace nabo {
 static const uint8_t x509[] PROGMEM = {
@@ -72,43 +73,52 @@ static const uint8_t rsakey[] PROGMEM = {
 
 static WiFiManager wifiManager;
 static ESP8266WebServerSecure server(443);
+static WebSocketsServer webSocket(443);
 
 struct nabo_server {
 
   static void setup() {
     Serial.begin(115200);
-    Serial.println("hello");
+    Serial.println("starting nabo server");
     wifiManager.autoConnect("nabo", "robrota1");
-    // Wait for connection
     while (WiFi.status() != WL_CONNECTED) {
       delay(500);
       Serial.print(".");
     }
-    Serial.println(" now connected");
+    Serial.println(" now connected!");
     Serial.print("my IP is:\t");
     Serial.println(WiFi.localIP());
-
+    
+    Serial.println("starting mDNS");   
     if (MDNS.begin("nabonet"))
-      Serial.println("MDNS responder started:\nhttps://nabonet.local");
+      Serial.println("mDNS responder started:\nhttps://nabonet.local");
     else
-      Serial.println("MDNS responder failed");
-      
-    ArduinoOTA.begin();
+      Serial.println("mDNS failed");
 
+    
+    Serial.println("starting ArduinoOTA");   
+    ArduinoOTA.begin(false);
+    /// TODO set password
+
+    Serial.println("seting SSL keys");   
     server.getServer().setServerKeyAndCert_P(rsakey, sizeof(rsakey), x509, sizeof(x509));
+    /// TODO create my keys
 
     server.on("/", handleRoot);
-
     server.on("/inline", []() {
       server.send(200, "text/plain", "this works as well");
     });
-
     server.onNotFound(handleNotFound);
 
     server.begin();
     Serial.println("HTTPS server started");
 
+    Serial.println("starting SPIFFS");   
     SPIFFS.begin();
+
+    Serial.println("starting WebSocketsServer");   
+    webSocket.begin();
+    webSocket.onEvent(webSocketEvent);
   }
 
   static void loop() {
@@ -118,7 +128,7 @@ struct nabo_server {
   }
 
   static void handleRoot() {
-    server.send(200, "text/plain", "hello wrold");
+    server.send(200, "text/plain", "hello wrold 2");
   }
 
   static void handleNotFound() {
@@ -134,6 +144,22 @@ struct nabo_server {
       message += " " + server.argName(i) + ": " + server.arg(i) + "\n";
     }
     server.send(404, "text/plain", message);
+  }
+
+  static void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t lenght) {
+    switch (type) {
+      case WStype_DISCONNECTED:
+        Serial.printf("[%u] Disconnected!\n", num);
+        break;
+      case WStype_CONNECTED: {
+        IPAddress ip = webSocket.remoteIP(num);
+        Serial.printf("[%u] Connected from %d.%d.%d.%d url: %s\n", num, ip[0], ip[1], ip[2], ip[3], payload);
+        }
+        break;
+      case WStype_TEXT:
+        Serial.printf("[%u] get Text: %s\n", num, payload);
+        break;
+    }
   }
 };
 
