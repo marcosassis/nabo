@@ -30,4 +30,16 @@ D.onclick=e=>{
 L.setAttribute('href',c.toDataURL(""))
 L.click()
 }
+c.onclick=e=>{
+r=c.getBoundingClientRect()
+X=e.x-r.left
+X*=c.width/c.offsetWidth
+X|=0
+Y=e.y-r.top
+Y*=c.height/c.offsetHeight
+Y|=0
+D=x.getImageData(X,Y,1,1)
+for(i=3;i--;)D.data[i]^=255
+x.putImageData(D,X,Y)
+}
 </script>
