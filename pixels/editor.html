@@ -21,7 +21,7 @@ image-rendering:crisp-edges;
 x=c.getContext('2d')
 I=new Image()
 I.onload=_=>x.drawImage(I,0,0,c.width=I.width,c.height=I.height)
-I.src="templates/128x96-comp.png"
+I.src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFQAAAAwAQMAAAC1wM/OAAAABlBMVEX///8AAABVwtN+AAAACXBIWXMAAA7EAAAOxAGVKw4bAAABHElEQVQokXXRsU4CQRAG4DkWb8GgR+cRiNBoZXF0RkmwsLDwHaRD38HIWkjHO22MD3Kl5UUbCsIy/8yZ20ZymXzZ/MzO7hL9/ysiX0d+jvzgGj/5xqu7xm/R+jLKS8SqJXKilkjXNesD8WqLmrsW1zKD+7BxCUJTZFKiBbz5JBr1cxxgGl54+mKGAwx3V0QT7sEe7y8k3IbDpTiF/VImE2+/xNgxn38QPaoLTHqvntAxMsma0KLL5bT2EQcz15OD8i4jcrmYR+evEvN/kzLzYiRv91zCDuuE5SwE16mva0ZJVd8Whp23lDi92agNyrf6HOVGLa93pn5FQf8Q3ktDxlvZ5re0ZHGt7B+8i+dmNoQ1/b3SuGqLdZ6e1PQAaaxCBbQTw/wAAAAASUVORK5CYII="
 U.onchange=e=>{
 r=new FileReader()
 r.onload=f=>I.src=f.target.result
@@ -33,7 +33,6 @@ L.click()
 }
 c.onmousedown=c.onmousemove=e=>{
 if(!e.buttons||e.buttons&2)return
-E=e
 r=c.getBoundingClientRect()
 X=e.x-r.left
 X*=c.width/c.offsetWidth
@@ -41,7 +40,6 @@ X|=0
 Y=e.y-r.top
 Y*=c.height/c.offsetHeight
 Y|=0
-D=x.createImageData(1,1)
 x.fillStyle=e.buttons==4?"#FFF":"#000"
 x.fillRect(X,Y,1,1)
 }
