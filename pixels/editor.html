@@ -33,8 +33,7 @@ L.click()
 }
 xx=yy=-1
 c.onmousedown=c.onmousemove=e=>{
-E=e
-if(!e.buttons)return
+if(!e.buttons||e.buttons&2)return
 r=c.getBoundingClientRect()
 X=e.x-r.left
 X*=c.width/c.offsetWidth
@@ -44,7 +43,7 @@ Y*=c.height/c.offsetHeight
 Y|=0
 if(xx==X&&yy==Y)return
 D=x.getImageData(X,Y,1,1)
-for(i=3;i--;)D.data[i]^=255
+for(i=3;i--;)D.data[i]=e.buttons==4?255:0
 x.putImageData(D,X,Y)
 xx=X
 yy=Y
