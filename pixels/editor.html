@@ -1,21 +1,22 @@
 <style>
 body{
 	background: rgb(116, 100, 116);
+	display: grid;
 }
 
-#B {
+#B,#c {
 	width: 480px;
 	height: 480px;
-	margin: 0 auto;
+	margin: 10px auto;
 }
 
 #p {
 	content: '';
-	width: 10px;
-	height: 10px;
+	position: relative;
 }
 </style>
 <div id=B><div id=p></div></div>
+<canvas id=c></canvas>
 <script type=text/javascript>
 robrot=`\
 000000000000000000000000000000000000000000000000
@@ -35,9 +36,9 @@ robrot=`\
 000000000101000000000000000000001010011100000000
 000000000111000000000000000000001100011000000000
 000000000010000000000010000000000000011000000000
-000000000110000000000110000000000000011000000000
+000000000110000000000010000000000000011000000000
 000000000110000000000111000000000000011000000000
-000000001100000000000000000010000000001000000000
+000000001100000000000010000010000000001000000000
 000000001100000000100000001100000000001100000000
 000000001100000000011000011100000000001100000000
 000000001100011000011000011000110000001100000000
@@ -69,9 +70,21 @@ robrot=`\
 console.log(robrot)
 // m=robrot.match(/.{1,8}/g).map(a=>'0b'+a-0) // get bytes
 // R=(r,g,b)=>`rgb(${r|0},${g|0},${b|0})`
+x=c.getContext('2d')
 H=(s,w,h,f)=>f.match(/0|1/g).map((a,i)=>`${(i%w)*s+s}px ${(i/h|0)*s}px rgb(${b=a=='0'?255:0},${b},${b})`).join(',')
+p.s=p.style
+D=(s,w,h,f)=>{
+p.s.boxShadow=H(s,w,h,f)
+p.s.width=p.s.height=s+"px"
+p.s.left="-"+s+"px"
+c.width=w*s
+c.height=h*s
+for(i=h*w;--i;x.fillRect((i%w)*s,(i/h|0)*s,s,s))x.fillStyle=f[i]=='0'?"#fff":"#000"
+}
+D(10,48,48,robrot)
 
-p.style.boxShadow=H(10,48,48,robrot)
+
+
 
 B.onmousedown=B.onmousemove=e=>{
 if(!e.buttons||e.buttons&2)return
