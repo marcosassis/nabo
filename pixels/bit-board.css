@@ -1,0 +1,17 @@
+body {
+  background: rgb(109, 77, 109);
+  display: grid;
+}
+
+#c,#B,#S {
+  margin: 22vh auto;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: -webkit-crisp-edges;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+#p {
+  content: '';
+  position: relative;
+}

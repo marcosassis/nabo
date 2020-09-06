@@ -1,24 +1,4 @@
-<style>
-body{
-background:rgb(116, 100, 116);
-display:grid;
-}
-#B,#c{
-margin:10vh auto;
-image-rendering:-moz-crisp-edges;
-image-rendering:-webkit-crisp-edges;
-image-rendering:pixelated;
-image-rendering:crisp-edges;
-}
-#p {
-content:'';
-position:relative;
-}
-</style>
-<canvas id=c></canvas>
-<div id=B><div id=p>
-<script type=text/javascript>
-robrot=`\
+robrot = `\
 000000000000000000000000000000000000000000000000
 000000000000000000000000000000000000000000000000
 000000000000000000000110000011000000000000000000
@@ -69,46 +49,57 @@ robrot=`\
 000000000000000000000000000000000000000000000000`
 // m=robrot.match(/.{1,8}/g).map(a=>'0b'+a-0) // get bytes
 // R=(r,g,b)=>`rgb(${r|0},${g|0},${b|0})`
-x=c.getContext('2d')
+x = c.getContext('2d')
 console.log(robrot)
-A=f=>f.match(/0|1/g).map(a=>a!='0')
-H=(s,w,h,f)=>f.map(
-(a,i)=>`${(i%w)*s+s}px ${(i/h|0)*s}px rgb(${b=a?0:255},${b},${b})`
+A = f => f.match(/0|1/g).map(a => a != '0')
+H = (s, w, h, f) => f.map(
+  (a, i) => `${(i % w) * s + s}px ${(i / h | 0) * s}px rgb(${b = a ? 0 : 255},${b},${b})`
 ).join(',')
-C=(s,w,h,f)=>{
-f.map((a,i)=>{
-x.fillStyle=a?"#000":"#fff"
-x.fillRect((i%w)*s,(i/h|0)*s,s,s)})
+C = (s, w, h, f) => {
+  f.map((a, i) => {
+    x.fillStyle = a ? "#000" : "#fff"
+    x.fillRect((i % w) * s, (i / h | 0) * s, s, s)
+  })
 }
-D=(s,w,h,f)=>{
-y="style"
-i="width"
-e="height"
-p[y].boxShadow=H(s,w,h,f)
-p[y][i]=p[y][e]=s+"px"
-p[y].left=c[y].left="-"+s+"px"
-c[i]=w*s
-c[e]=h*s
-C(s,w,h,f)
-c[y][i]=B[y][i]=w*s+"px"
-c[y][e]=B[y][e]=h*s+"px"
+W = (s, w, h, f) => {
+  y = "style"
+  i = "width"
+  e = "height"
+  p[y].boxShadow = H(s, w, h, f)
+  p[y][i] = p[y][e] = s + "px"
+  p[y].left = c[y].left = "-" + s + "px"
+  c[i] = w * s
+  c[e] = h * s
+  C(s, w, h, f)
+  c[y][i] = B[y][i] = w * s + "px"
+  c[y][e] = B[y][e] = h * s + "px"
 }
-PIXELSIZE=8
-D(PIXELSIZE,48,48,A(robrot))
+PIXELSIZE = 8
+W(PIXELSIZE, 48, 48, A(robrot))
+//P=
 
-
-c.onmousedown=c.onmousemove=e=>{
-if(!e.buttons||e.buttons&2)return
-r=c.getBoundingClientRect()
-X=e.x-r.left
-X*=c.clientWidth/c.offsetWidth
-X|=0
-Y=e.y-r.top
-Y*=c.clientHeight/c.offsetHeight
-Y|=0
-x.fillStyle=e.buttons==4?"#FFF":"#000"
-x.fillRect(X-X%PIXELSIZE,Y-Y%PIXELSIZE,PIXELSIZE,PIXELSIZE)
-console.log(X,"\t",Y,"\t",e.x,"\t",e.y)
+I = new Image()
+I.onload = _ => x.drawImage(I, 0, 0, c.width = I.width, c.height = I.height)
+U.onchange = e => {
+  r = new FileReader()
+  r.onload = f => I.src = f.target.result
+  r.readAsDataURL(e.target.files[0])
+}
+D.onclick = e => {
+  L.setAttribute('href', c.toDataURL(""))
+  L.click()
 }
 
-</script>
+c.onmousedown = c.onmousemove = e => {
+  if (!e.buttons || e.buttons & 2) return
+  r = c.getBoundingClientRect()
+  X = e.x - r.left
+  X *= c.clientWidth / c.offsetWidth
+  X |= 0
+  Y = e.y - r.top
+  Y *= c.clientHeight / c.offsetHeight
+  Y |= 0
+  x.fillStyle = e.buttons == 4 ? "#FFF" : "#000"
+  x.fillRect(X - X % PIXELSIZE, Y - Y % PIXELSIZE, PIXELSIZE, PIXELSIZE)
+  console.log(X, "\t", Y, "\t", e.x, "\t", e.y)
+}
