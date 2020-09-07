@@ -47,11 +47,51 @@ robrot = `\
 000000000000000000011111111100000000000000000000
 000000000000000000000111100000000000000000000000
 000000000000000000000000000000000000000000000000`
-// m=robrot.match(/.{1,8}/g).map(a=>'0b'+a-0) // get bytes
-// R=(r,g,b)=>`rgb(${r|0},${g|0},${b|0})`
-x = c.getContext('2d')
 console.log(robrot)
-A = f => f.match(/0|1/g).map(a => a != '0')
+
+bytesArray = function(asciiBinary) {
+  return asciiBinary.match(/.{1,8}/g).map(a=>'0b'+a-0)
+}
+
+bitsArray = function(asciiBinary) {
+  return asciiBinary.match(/0|1/g).map(a=>~~a)
+}
+
+boxShadowString = function(s,w,h,bits) {
+  return bits.map(
+      (a,i)=>`${(i%w)*s+s}px ${(i/h|0)*s}px 0 0 ${a?"#000":"#fff"}${i%w==w-1?'\n':''}`
+    ).join(',')
+}
+
+drawBitsOnCSS = function(s,w,h,bits,board,pix) {
+  board.style.width = w * s + "px"
+  board.style.height = h * s + "px"
+  pix.style.boxShadow = boxShadowString(s,w,h,bits)
+  pix.style.width = pix.style.height = s + "px"
+  pix.style.left = "-" + s + "px"
+}
+
+drawBitsOnCanvas = function(s,w,h,bits,canv,ctx) {
+  canv.width = w
+  canv.height = h
+  canv.style.width = w * s + "px"
+  canv.style.height = h * s + "px"
+  bits.map(
+    (a,i)=>{
+      ctx.fillStyle=a?"#000":"#fff"
+      //ctx.fillRect((i%w)*s,(i/h|0)*s,s,s)
+      ctx.fillRect(i%w,i/h|0,1,1)
+    })
+}
+
+robits=bitsArray(robrot)
+drawBitsOnCSS(9,48,48,robits,B,p)
+drawBitsOnCanvas(9,48,48,robits,c,c.getContext('2d'))
+PIXELSIZE = 9
+
+
+x = c.getContext('2d')
+A = f => f.match(/0|1/g).map(a=>~~a)
 H = (s, w, h, f) => f.map(
   (a, i) => `${(i % w) * s + s}px ${(i / h | 0) * s}px rgb(${b = a ? 0 : 255},${b},${b})`
 ).join(',')
@@ -62,24 +102,24 @@ C = (s, w, h, f) => {
   })
 }
 W = (s, w, h, f) => {
-  y = "style"
-  i = "width"
-  e = "height"
-  p[y].boxShadow = H(s, w, h, f)
-  p[y][i] = p[y][e] = s + "px"
-  p[y].left = c[y].left = "-" + s + "px"
-  c[i] = w * s
-  c[e] = h * s
+  p.style.boxShadow = H(s, w, h, f)
+  p.style.width = p.style.height = s + "px"
+  p.style.left = "-" + s + "px"
+  c.width = w * s
+  c.height = h * s
   C(s, w, h, f)
-  c[y][i] = B[y][i] = w * s + "px"
-  c[y][e] = B[y][e] = h * s + "px"
+  c.style.width = B.style.width = w * s + "px"
+  c.style.height = B.style.height = h * s + "px"
 }
-PIXELSIZE = 8
-W(PIXELSIZE, 48, 48, A(robrot))
-//P=
+//W(PIXELSIZE, 48, 48, A(robrot))
 
 I = new Image()
-I.onload = _ => x.drawImage(I, 0, 0, c.width = I.width, c.height = I.height)
+I.onload = _ => {
+  x.drawImage(I, 0, 0, c.width = I.width, c.height = I.height)
+  s=PIXELSIZE
+  c.style.width = I.width * s + "px"
+  c.style.height = I.height * s + "px"
+}
 U.onchange = e => {
   r = new FileReader()
   r.onload = f => I.src = f.target.result
@@ -94,12 +134,14 @@ c.onmousedown = c.onmousemove = e => {
   if (!e.buttons || e.buttons & 2) return
   r = c.getBoundingClientRect()
   X = e.x - r.left
-  X *= c.clientWidth / c.offsetWidth
+  X *= c.width / c.clientWidth
   X |= 0
   Y = e.y - r.top
-  Y *= c.clientHeight / c.offsetHeight
+  Y *= c.height / c.clientHeight
   Y |= 0
   x.fillStyle = e.buttons == 4 ? "#FFF" : "#000"
-  x.fillRect(X - X % PIXELSIZE, Y - Y % PIXELSIZE, PIXELSIZE, PIXELSIZE)
-  console.log(X, "\t", Y, "\t", e.x, "\t", e.y)
+  //x.fillRect(X - X % PIXELSIZE, Y - Y % PIXELSIZE, PIXELSIZE, PIXELSIZE)
+  x.fillRect(X, Y, 1, 1)
+  // console.log(X, "\t", Y, "\t", e.x, "\t", e.y)
+  console.log(X, "\t", Y)
 }
