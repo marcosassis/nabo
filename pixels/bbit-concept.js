@@ -1,52 +1,35 @@
 // GPLv3 marcos assis 2020
 
-BBoard=function(w,h,s=1,buf=new Uint8ClampedArray(w*h/8)){
+// Board=function(w,h,depth=1,ps=1){
+//   t=this
+//   t.self=t
+//   t.w=w
+//   t.h=h
+//   t.depth=depth
+//   t.ps=ps
+//   t.views=[]
+//   t.commands=[]
+// }
+
+Board=function(w,h,d=1,s=1){
   return{
-    w,h,s,
-    get buffer(){
-      return buf
-    },
-    get(p,q){
-      return buf[(a=p*w+q)/8|0]>>a%8&1
-    },
-    set(p,q,v){
-      v^this.get(p,q)?buf[(a=p*w+q)/8|0]^=v<<a%8:0
-    },
-    toString(byteSep=' ',colSep='\n'){
-      for(i=r='';i<w;++i,r+=colSep)
-        for(j=0;j<h;++j%8?r:r+=byteSep)
-          r+=this.get(i,j)
-    //  for(j=0;j<h;j+=8)
-    //    r+=buf[(i*w+j)/8].toString(2).padStart(8,0)+byteSep
-      return r
-    },
-    
-    
-    
+    w,h,d,s,
     views:[],
     commands:[],
-
-
-
-    View:{
-      draw(){
-        console.log("a View draws")
-      },
-      toString(){
-        console.log("a View toString...")
-      },
-      Canvas:function(c){
+    pixels:new Uint8Array(w*h*d/8),
+    get(p,q,W=1,H=1){
+      return pixels.slice(a=(p*w+q)*d,)
+    },
+    View:function(){
+      Canvas=function(c){
         return{
-          //c:c,
-          a:0,
-          b:1,
+          c:c,
           draw(){
             console.log("a Canvas View draws")
-            console.log(TT=this)
           }
         }
-      },
-      CSSBoxShadow:function(e){
+      }
+      CSSBoxShadow=function(e){
         return{
           e:e,
           draw(){
@@ -54,9 +37,40 @@ BBoard=function(w,h,s=1,buf=new Uint8ClampedArray(w*h/8)){
           }
         }
       }
+    },
+    draw(){
+      this.views.map(v=>v.draw())
+    },
+    Command:{
+      Paint:function(){},
+      Erase:function(){},
+      Cut:function(){},
+      Paste:function(){}
+    },
+    Brush:{
+      Pencil:function(){},
+      Fill:function(){},
+      Line:function(){}
+    },
+    Palette:{
+      Binary:function(){
+        return{
+          fg:""
+        }
+      }
     }
+    //Channel
+    //Layer
   }
-};
+}
+
+b=new Board(48,48)
+b=Board(48,48)
+v1=new b.View.Canvas(c)
+v1=b.View.Canvas(c)
+v2=new b.View.CSSBoxShadow(c)
+v2=b.View.CSSBoxShadow(c)
+b.views.push(v1,v2)
 
 
 
@@ -111,18 +125,3 @@ robrot = `\
 000000000000000000000111100000000000000000000000
 000000000000000000000000000000000000000000000000`
 console.log(robrot)
-
-
-
-b1=BBoard(48,48)
-b2=BBoard(32,32)
-b3=new BBoard(42,42)
-b4=new BBoard(16,16)
-b1.set(3,15,1)
-
-v1=b1.View.Canvas(c)
-v1.draw()
-
-b3.set(2,14,1)
-v3=new b3.View.Canvas(c)
-v3.draw()
