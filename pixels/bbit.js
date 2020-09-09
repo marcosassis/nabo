@@ -30,8 +30,12 @@ BBoard=function(w,h,s=8,buf=new Uint8ClampedArray(w*h/8)){
           r+=this.get(j,i)//TODO:why?
       return r
     },
+    views:[],
+    addView(v){
+      this.views.push(v)
+    },
     draw(){
-      this.views.map(a=>a.draw())
+      this.views.map(a=>console.log(a)||a.draw())
     },
     setDrawPixel(v,p,q){
       o=this.set(v,p,q)
@@ -39,9 +43,25 @@ BBoard=function(w,h,s=8,buf=new Uint8ClampedArray(w*h/8)){
       return o
     },
     commands:[],
-    views:[],
-    addView(v){
-      this.views.push(v)
+    redoCount:0,
+    get lastCmd(){
+      return this.commands[this.redoCount]
+    },
+    addCommand(c){
+      this.commands.unshift(c)
+    },
+    undo(){
+      if(cmd=this.lastCmd){
+        cmd.undo()
+        ++this.redoCount
+      }
+    },
+    redo(){
+      console.log("!")
+      if(cmd=this.commands[this.redoCount-1]){
+        cmd.redo()
+        --this.redoCount
+      }
     },
     loadAscii(A){
       A.match(/0|1/g).map((a,i)=>this.set(~~a,i%w,i/w|0))
@@ -50,7 +70,7 @@ BBoard=function(w,h,s=8,buf=new Uint8ClampedArray(w*h/8)){
   Command=function(board){
     return{
       Paint:function(v){
-        return{
+        cmd={
           board,
           v,
           undoList:[],
@@ -58,13 +78,21 @@ BBoard=function(w,h,s=8,buf=new Uint8ClampedArray(w*h/8)){
             board.setDrawPixel(v,p,q)^v&&this.undoList.push(p*w+q)
           },
           do(){
-            //board.draw();
+            console.log("do "+this.undoList)
           },
+          redo(){
+            console.log("redo "+this.undoList)
+            this.undoList.map(p=>board.set(this.v,p))
+            board.draw()
+          },  
           undo(){
+            console.log("undo "+this.undoList)
             this.undoList.map(p=>board.set(!this.v,p))
             board.draw()
           }
         }
+        board.addCommand(cmd)
+        return cmd
       }
     }
   }
@@ -80,27 +108,25 @@ BBoard=function(w,h,s=8,buf=new Uint8ClampedArray(w*h/8)){
         c.style.width=w*s+"px"
         c.style.height=h*s+"px"
         cmd=0
-        c.onmousedown=e=>{
+        c.onmousedown=c.onmousemove=e=>{
           b=e.buttons
           if(!b||b&2)return
-          cmd=board.Command.Paint(b==1)
-        }
-        c.onmousemove=e=>{
-          if(!e.buttons||e.buttons&2)return
+          cmd=cmd||board.Command.Paint(b==1)
           r=c.getBoundingClientRect()
           X=(e.x-r.left)*c.width/c.clientWidth|0
           Y=(e.y-r.top)*c.height/c.clientHeight|0
           cmd.addPixel(X,Y)
         }
-        c.onmouseup=e=>{
+        c.onmouseup=c.onblur=e=>{
           cmd.do()
+          cmd=0
         }
         E=0
         document.onkeydown=e=>{
           E=e
           console.log("::: "+e.key)
-          if(e.key=='z'&&e.ctrlKey&&cmd)
-            cmd.undo()
+          if(e.ctrlKey)
+            e.key=='z'?board.undo():e.key=='y'&&board.redo()
         }
         cv={
           c,
@@ -211,7 +237,7 @@ b1.View.Canvas(c)
 b1.View.ConsoleLog()
 b1.loadAscii(robrot)
 b1.set(1,2,4)
-c1=b1.Command.Paint(1,[5,8,16,17,2*48+4])
+//c1=b1.Command.Paint(1,[5,8,16,17,2*48+4])
 b1.draw()
 
 // b3.set(1,2,14)
