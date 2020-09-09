@@ -1,33 +1,59 @@
 // GPLv3 marcos assis 2020
 
-
 BBoard=function(w,h,s=1,buf=new Uint8ClampedArray(w*h/8)){
   board={
-    w,h,s,
-    commands:[],views:[],
+    get width(){
+      return w
+    },
+    get height(){
+      return w
+    },
+    get pixelSize(){
+      return s
+    },
     get buffer(){
       return buf
     },
     get(p,q){
-      return buf[(a=p*w+q)/8|0]>>a%8&1
+      a=q===undefined?p:p*w+q
+      return buf[a/8|0]>>a%8&1
     },
-    set(p,q,v){
-      v^this.get(p,q)?buf[(a=p*w+q)/8|0]^=v<<a%8:0
+    set(v,p,q){
+      a=q===undefined?p:p*w+q
+      o=this.get(p,q)
+      v^o?buf[a/8|0]^=1<<a%8:0
+      return o
     },
     toString(byteSep=' ',colSep='\n'){
       for(i=r='';i<w;++i,r+=colSep)
         for(j=0;j<h;++j%8?r:r+=byteSep)
           r+=this.get(i,j)
-    //  for(j=0;j<h;j+=8)
-    //    r+=buf[(i*w+j)/8].toString(2).padStart(8,0)+byteSep
       return r
     },
     draw(){
       this.views.map(a=>a.draw())
     },
+    commands:[],
+    views:[],
     addView(view){
-      view.board=this
       this.views.push(view)
+    }
+  }
+  Command=function(board){
+    return{
+      Paint:function(v,pxList){
+        return{
+          board,
+          v,
+          undoList:[],
+          do(){
+            pxList.map(p=>board.set(v,p)^v&&this.undoList.push(p))
+          },
+          undo(){
+            this.undoList.map(p=>board.set(!this.v,p))
+          }
+        }
+      }
     }
   }
   View=function(board){
@@ -59,6 +85,7 @@ BBoard=function(w,h,s=1,buf=new Uint8ClampedArray(w*h/8)){
     }
   }
   board.View=View(board)
+  board.Command=Command(board)
   return board
 }
 
@@ -122,13 +149,13 @@ b1=BBoard(48,48)
 b2=BBoard(32,32)
 b3=new BBoard(42,42)
 b4=new BBoard(16,16)
-b1.set(3,15,1)
+b1.set(1,3,15)
 
 v1=b1.View.Canvas(c)
 v1.draw()
 
-b3.set(2,14,1)
-v3=new b3.View.Canvas(c)
+b3.set(1,2,14)
+v3=new b3.View.Canvas(0)
 b3.draw()
 
 v3.draw=function(){
@@ -137,3 +164,5 @@ v3.draw=function(){
   console.log(this.board.toString().replace(/0/g,'_')) 
 }
 b3.draw()
+
+c1=b1.Command.Paint(1,[5,8,16,17])
