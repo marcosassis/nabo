@@ -1,8 +1,10 @@
 // GPLv3 marcos assis 2020
 
+
 BBoard=function(w,h,s=1,buf=new Uint8ClampedArray(w*h/8)){
-  return{
+  board={
     w,h,s,
+    commands:[],views:[],
     get buffer(){
       return buf
     },
@@ -20,35 +22,35 @@ BBoard=function(w,h,s=1,buf=new Uint8ClampedArray(w*h/8)){
     //    r+=buf[(i*w+j)/8].toString(2).padStart(8,0)+byteSep
       return r
     },
-    
-    
-    
-    views:[],
-    commands:[],
-
-
-
-    View:{
-      draw(){
-        console.log("a View draws")
-      },
-      toString(){
-        console.log("a View toString...")
-      },
+    draw(){
+      this.views.map(a=>a.draw())
+    },
+    addView(view){
+      view.board=this
+      this.views.push(view)
+    }
+  }
+  View=function(board){
+    function printBoard(){
+      console.log(board.toString())
+    }
+    return{
       Canvas:function(c){
-        return{
-          //c:c,
-          a:0,
-          b:1,
+        cv={
+          c,
+          board,
           draw(){
             console.log("a Canvas View draws")
-            console.log(TT=this)
+            console.log(c)
+            printBoard()
           }
         }
+        board.addView(cv)
+        return cv
       },
       CSSBoxShadow:function(e){
         return{
-          e:e,
+          e,
           draw(){
             console.log("a CSSBoxShadow View draws")
           }
@@ -56,7 +58,9 @@ BBoard=function(w,h,s=1,buf=new Uint8ClampedArray(w*h/8)){
       }
     }
   }
-};
+  board.View=View(board)
+  return board
+}
 
 
 
@@ -125,4 +129,11 @@ v1.draw()
 
 b3.set(2,14,1)
 v3=new b3.View.Canvas(c)
-v3.draw()
+b3.draw()
+
+v3.draw=function(){
+  console.log("a modified Canvas View draws")
+  console.log(c)
+  console.log(this.board.toString().replace(/0/g,'_')) 
+}
+b3.draw()
