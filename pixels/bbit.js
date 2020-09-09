@@ -33,6 +33,11 @@ BBoard=function(w,h,s=8,buf=new Uint8ClampedArray(w*h/8)){
     draw(){
       this.views.map(a=>a.draw())
     },
+    setDrawPixel(v,p,q){
+      o=this.set(v,p,q)
+      v^o&&this.views.map(a=>a.drawPixel(v,p,q))
+      return o
+    },
     commands:[],
     views:[],
     addView(v){
@@ -44,17 +49,20 @@ BBoard=function(w,h,s=8,buf=new Uint8ClampedArray(w*h/8)){
   }
   Command=function(board){
     return{
-      Paint:function(v,pxList=[]){
+      Paint:function(v){
         return{
           board,
           v,
           undoList:[],
-          pxList,
+          addPixel(p,q){
+            board.setDrawPixel(v,p,q)^v&&this.undoList.push(p*w+q)
+          },
           do(){
-            pxList.map(p=>board.set(v,p)^v&&this.undoList.push(p))
+            //board.draw();
           },
           undo(){
             this.undoList.map(p=>board.set(!this.v,p))
+            board.draw()
           }
         }
       }
@@ -71,7 +79,7 @@ BBoard=function(w,h,s=8,buf=new Uint8ClampedArray(w*h/8)){
         c.height=h
         c.style.width=w*s+"px"
         c.style.height=h*s+"px"
-        X=Y=cmd=-1
+        cmd=0
         c.onmousedown=e=>{
           b=e.buttons
           if(!b||b&2)return
@@ -82,29 +90,46 @@ BBoard=function(w,h,s=8,buf=new Uint8ClampedArray(w*h/8)){
           r=c.getBoundingClientRect()
           X=(e.x-r.left)*c.width/c.clientWidth|0
           Y=(e.y-r.top)*c.height/c.clientHeight|0
-          x.fillStyle=e.buttons==4?"#FFF":"#000"
-          x.fillRect(X,Y,1,1)
-          console.log(board.get(X,Y)+'  '+X+' '+Y)
-          console.log(cmd.pxList.push(X*w+Y))
+          cmd.addPixel(X,Y)
         }
         c.onmouseup=e=>{
           cmd.do()
-          board.draw()
+        }
+        E=0
+        document.onkeydown=e=>{
+          E=e
+          console.log("::: "+e.key)
+          if(e.key=='z'&&e.ctrlKey&&cmd)
+            cmd.undo()
         }
         cv={
           c,
           board,
+          drawPixel(v,p,q){
+            x.fillStyle=v?"#000":"#fff"
+            x.fillRect(p,q,1,1)
+          },
           draw(){
-            console.log("a Canvas View draws")
-            console.log(c)
-            printBoard()
-            for(i=w;i--;r+='\n')
-              for(j=h;j--;x.fillRect(i,j,1,1))
-                x.fillStyle=board.get(i,j)?"#000":"#fff"
+            for(i=w;i--;)
+              for(j=h;j--;)
+                this.drawPixel(board.get(i,j),i,j)
           }
         }
         board.addView(cv)
         return cv
+      },
+      ConsoleLog:function(){
+        cl={
+          board,
+          drawPixel(v,p,q){
+            console.log(p+' '+q+' : '+v)
+          },
+          draw(){
+            printBoard()
+          }
+        }
+        board.addView(cl)
+        return cl
       },
       CSSBoxShadow:function(e){
         return{
@@ -183,6 +208,7 @@ b1=BBoard(48,48)
 // b4=new BBoard(16,16)
 
 b1.View.Canvas(c)
+b1.View.ConsoleLog()
 b1.loadAscii(robrot)
 b1.set(1,2,4)
 c1=b1.Command.Paint(1,[5,8,16,17,2*48+4])
