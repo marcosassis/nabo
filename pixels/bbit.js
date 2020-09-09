@@ -35,8 +35,11 @@ BBoard=function(w,h,s=1,buf=new Uint8ClampedArray(w*h/8)){
     },
     commands:[],
     views:[],
-    addView(view){
-      this.views.push(view)
+    addView(v){
+      this.views.push(v)
+    },
+    loadAscii(A){
+      A.match(/0|1/g).map((a,i)=>this.set(~~a,i))
     }
   }
   Command=function(board){
@@ -153,6 +156,9 @@ b1.set(1,3,15)
 
 v1=b1.View.Canvas(c)
 v1.draw()
+
+b1.loadAscii(robrot)
+b1.draw()
 
 b3.set(1,2,14)
 v3=new b3.View.Canvas(0)
