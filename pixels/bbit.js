@@ -27,7 +27,6 @@ BBoard=function(w,h,s=8,buf=new Uint8ClampedArray(w*h/8)){
     toString(byteSep=' ',colSep='\n'){
       for(i=0,r='';i<w;++i,r+=colSep)
         for(j=0;j<h;++j%8?r:r+=byteSep)
-          //r+=i+" "+j+"  "+this.get(i,j)+"\n"
           r+=this.get(i,j)
       return r
     },
@@ -73,6 +72,16 @@ BBoard=function(w,h,s=8,buf=new Uint8ClampedArray(w*h/8)){
       A.match(/0|1/g).map((a,i)=>this.set(~~a,i))
     }
   }
+  imgPro=new Proxy(board,{
+    get:function(t1,p){
+      return new Proxy(t1,{
+        get:function(t,q){
+          return t.get(p|0,q|0)
+        }
+      })
+    }
+  })
+  board.image=imgPro
   Command=function(board){
     return{
       Paint:function(v){
