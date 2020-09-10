@@ -48,24 +48,24 @@ BBoard=function(w,h,s=8,buf=new Uint8ClampedArray(w*h/8)){
       get last(){
         return this.done[this.done.length-1]
       },
-      add(c){
-        this.done.push(c)
+      add(cmd){
+        this.done.push(cmd)
         this.undone=[]
-        console.log("history add: "+c)
+      },
+      removeLast(){
+        this.done.pop()
       },
       undo(){
-        if(c=this.done.pop()){
-          this.undone.push(c)
-          c.undo()
+        if(cmd=this.done.pop()){
+          this.undone.push(cmd)
+          cmd.undo()
         }
-        console.log("history undo: "+c)
       },
       redo(){
-        if(c=this.undone.pop()){
-          this.done.push(c)
-          c.redo()
+        if(cmd=this.undone.pop()){
+          this.done.push(cmd)
+          cmd.redo()
         }
-        console.log("history redo: "+c)
       },
     },
     loadAscii(A){
@@ -75,36 +75,30 @@ BBoard=function(w,h,s=8,buf=new Uint8ClampedArray(w*h/8)){
   Command=function(board){
     return{
       Paint:function(v){
-        cm={
+        let cmd={
           board,
           v,
           pxList:[],
           add(p,q){
-            console.log("Paint add: "+this.pxList)
             board.setDrawPixel(v,p,q)^v&&this.pxList.push(p*w+q)
           },
           do(){
-            console.log("Paint do: "+this.pxList)
+            if(this.pxList.length==0)board.history.removeLast()
           },
           undo(){
-            console.log("Paint undo "+this.pxList)
-            this.pxList.map(p=>board.set(!this.v,p))
-            board.draw()
+            this.pxList.map(p=>board.setDrawPixel(!this.v,p/w|0,p%w))
           },
           redo(){
-            console.log("Paint redo "+this.pxList)
-            this.pxList.map(p=>board.set(this.v,p))
-            board.draw()
+            this.pxList.map(p=>board.setDrawPixel(this.v,p/w|0,p%w))
           }
         }
-        board.history.add(cm)
-        return cm
+        board.history.add(cmd)
+        return cmd
       }
     }
   }
   View=function(board){
     function printBoard(){
-      console.log(board.toString())
     }
     return{
       Canvas:function(c){
@@ -136,7 +130,7 @@ BBoard=function(w,h,s=8,buf=new Uint8ClampedArray(w*h/8)){
             console.log(p+' '+q+' : '+v)
           },
           draw(){
-            printBoard()
+            console.log(board.toString())
           }
         }
         board.addView(cl)
@@ -155,7 +149,7 @@ BBoard=function(w,h,s=8,buf=new Uint8ClampedArray(w*h/8)){
   InputArea=function(board){
     return{
       Canvas:function(c){
-        cmd=0
+        let cmd=0
         c.onmousedown=c.onmousemove=e=>{
           b=e.buttons
           if(!b||b&2)return
