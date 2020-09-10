@@ -6,7 +6,7 @@ BBoard=function(w,h,s=8,buf=new Uint8ClampedArray(w*h/8)){
       return w
     },
     get height(){
-      return w
+      return h
     },
     get pixelSize(){
       return s
@@ -25,8 +25,8 @@ BBoard=function(w,h,s=8,buf=new Uint8ClampedArray(w*h/8)){
       return o
     },
     toString(byteSep=' ',colSep='\n'){
-      for(i=0,r='';i<w;++i,r+=colSep)
-        for(j=0;j<h;++j%8?r:r+=byteSep)
+      for(i=0,r='';i<h;++i,r+=colSep)
+        for(j=0;j<w;++j%8?r:r+=byteSep)
           r+=this.get(i,j)
       return r
     },
@@ -38,7 +38,7 @@ BBoard=function(w,h,s=8,buf=new Uint8ClampedArray(w*h/8)){
       this.views.push(v)
     },
     draw(){
-      this.views.map(a=>console.log(a)||a.draw())
+      this.views.map(a=>a.draw())
     },
     setDrawPixel(v,p,q){
       o=this.set(v,p,q)
@@ -113,11 +113,9 @@ BBoard=function(w,h,s=8,buf=new Uint8ClampedArray(w*h/8)){
             x.fillRect(q,p,1,1)
           },
           draw(){
-            r=''
-            for(i=w;i--;r+="\n")
-              for(j=h;j--;r+=i+" "+j+"\t")
+            for(i=h;i--;)
+              for(j=w;j--;)
                 this.drawPixel(board.get(i,j),i,j)
-            console.log(r)
           }
         }
         board.addView(cv)
@@ -158,15 +156,13 @@ BBoard=function(w,h,s=8,buf=new Uint8ClampedArray(w*h/8)){
           X=(e.x-r.left)*c.width/c.clientWidth|0
           Y=(e.y-r.top)*c.height/c.clientHeight|0
           cmd.add(Y,X)
-          console.log(X+" "+Y)
         }
-        c.onmouseup=c.onblur=e=>{
+        c.onmouseup=c.onmouseleave=e=>{
           cmd&&cmd.do()
           cmd=0
         }
         document.onkeydown=e=>{
           cmd=0
-          console.log("::: "+e.key)
           if(e.ctrlKey)
             if(e.key=='z')
               board.history.undo()
@@ -247,31 +243,28 @@ robrot = `\
 000000000000000000011111111100000000000000000000
 000000000000000000000111100000000000000000000000
 000000000000000000000000000000000000000000000000`
-console.log(robrot)
-
 
 
 b1=BBoard(48,48)
-// b2=BBoard(32,32)
-// b3=new BBoard(42,42)
-// b4=new BBoard(16,16)
+b2=BBoard(32,32)
+b3=new BBoard(47,42)
+b4=new BBoard(16,16)
+
+b3.set(1,2,14)
+v3=new b3.View.ConsoleLog()
+b3.loadAscii(robrot)
+v3.draw=function(){
+  console.log("a modified View draws:")
+  console.log(this.board.toString().replace(/0/g,'_')) 
+}
+//b3.draw()
 
 b1.View.Canvas(c)
 b1.View.ConsoleLog()
 b1.InputArea.Canvas(c)
 b1.loadAscii(robrot)
 b1.set(1,2,4)
-//c1=b1.Command.Paint(1,[5,8,16,17,2*48+4])
+b1.image[2][4]=0
 b1.draw()
 
-// b3.set(1,2,14)
-// v3=new b3.View.Canvas(0)
-// b3.draw()
-
-// v3.draw=function(){
-//   console.log("a modified Canvas View draws")
-//   console.log(c)
-//   console.log(this.board.toString().replace(/0/g,'_')) 
-// }
-// b3.draw()
-
+console.log(robrot.replace(/0/g,' '))
