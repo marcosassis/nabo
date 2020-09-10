@@ -42,26 +42,31 @@ BBoard=function(w,h,s=8,buf=new Uint8ClampedArray(w*h/8)){
       v^o&&this.views.map(a=>a.drawPixel(v,p,q))
       return o
     },
-    commands:[],
-    redoCount:0,
-    get lastCmd(){
-      return this.commands[this.redoCount]
-    },
-    addCommand(c){
-      this.commands.unshift(c)
-    },
-    undo(){
-      if(cmd=this.lastCmd){
-        cmd.undo()
-        ++this.redoCount
-      }
-    },
-    redo(){
-      console.log("!")
-      if(cmd=this.commands[this.redoCount-1]){
-        cmd.redo()
-        --this.redoCount
-      }
+    history:{
+      done:[],
+      undone:[],
+      get last(){
+        return this.done[this.done.length-1]
+      },
+      add(c){
+        this.done.push(c)
+        this.undone=[]
+        console.log("history add: "+c)
+      },
+      undo(){
+        if(c=this.done.pop()){
+          this.undone.push(c)
+          c.undo()
+        }
+        console.log("history undo: "+c)
+      },
+      redo(){
+        if(c=this.undone.pop()){
+          this.done.push(c)
+          c.redo()
+        }
+        console.log("history redo: "+c)
+      },
     },
     loadAscii(A){
       A.match(/0|1/g).map((a,i)=>this.set(~~a,i%w,i/w|0))
@@ -70,29 +75,30 @@ BBoard=function(w,h,s=8,buf=new Uint8ClampedArray(w*h/8)){
   Command=function(board){
     return{
       Paint:function(v){
-        cmd={
+        cm={
           board,
           v,
-          undoList:[],
-          addPixel(p,q){
-            board.setDrawPixel(v,p,q)^v&&this.undoList.push(p*w+q)
+          pxList:[],
+          add(p,q){
+            console.log("Paint add: "+this.pxList)
+            board.setDrawPixel(v,p,q)^v&&this.pxList.push(p*w+q)
           },
           do(){
-            console.log("do "+this.undoList)
+            console.log("Paint do: "+this.pxList)
+          },
+          undo(){
+            console.log("Paint undo "+this.pxList)
+            this.pxList.map(p=>board.set(!this.v,p))
+            board.draw()
           },
           redo(){
-            console.log("redo "+this.undoList)
-            this.undoList.map(p=>board.set(this.v,p))
-            board.draw()
-          },  
-          undo(){
-            console.log("undo "+this.undoList)
-            this.undoList.map(p=>board.set(!this.v,p))
+            console.log("Paint redo "+this.pxList)
+            this.pxList.map(p=>board.set(this.v,p))
             board.draw()
           }
         }
-        board.addCommand(cmd)
-        return cmd
+        board.history.add(cm)
+        return cm
       }
     }
   }
@@ -107,27 +113,6 @@ BBoard=function(w,h,s=8,buf=new Uint8ClampedArray(w*h/8)){
         c.height=h
         c.style.width=w*s+"px"
         c.style.height=h*s+"px"
-        cmd=0
-        c.onmousedown=c.onmousemove=e=>{
-          b=e.buttons
-          if(!b||b&2)return
-          cmd=cmd||board.Command.Paint(b==1)
-          r=c.getBoundingClientRect()
-          X=(e.x-r.left)*c.width/c.clientWidth|0
-          Y=(e.y-r.top)*c.height/c.clientHeight|0
-          cmd.addPixel(X,Y)
-        }
-        c.onmouseup=c.onblur=e=>{
-          cmd.do()
-          cmd=0
-        }
-        E=0
-        document.onkeydown=e=>{
-          E=e
-          console.log("::: "+e.key)
-          if(e.ctrlKey)
-            e.key=='z'?board.undo():e.key=='y'&&board.redo()
-        }
         cv={
           c,
           board,
@@ -167,7 +152,37 @@ BBoard=function(w,h,s=8,buf=new Uint8ClampedArray(w*h/8)){
       }
     }
   }
+  InputArea=function(board){
+    return{
+      Canvas:function(c){
+        cmd=0
+        c.onmousedown=c.onmousemove=e=>{
+          b=e.buttons
+          if(!b||b&2)return
+          cmd=cmd||board.Command.Paint(b==1)
+          r=c.getBoundingClientRect()
+          X=(e.x-r.left)*c.width/c.clientWidth|0
+          Y=(e.y-r.top)*c.height/c.clientHeight|0
+          cmd.add(X,Y)
+        }
+        c.onmouseup=c.onblur=e=>{
+          cmd.do()
+          cmd=0
+        }
+        document.onkeydown=e=>{
+          cmd=0
+          console.log("::: "+e.key)
+          if(e.ctrlKey)
+            if(e.key=='z')
+              board.history.undo()
+            else if(e.key=='y')
+              board.history.redo()
+        }
+      }
+    }
+  }
   board.View=View(board)
+  board.InputArea=InputArea(board)
   board.Command=Command(board)
   return board
 };
@@ -235,6 +250,7 @@ b1=BBoard(48,48)
 
 b1.View.Canvas(c)
 b1.View.ConsoleLog()
+b1.InputArea.Canvas(c)
 b1.loadAscii(robrot)
 b1.set(1,2,4)
 //c1=b1.Command.Paint(1,[5,8,16,17,2*48+4])
