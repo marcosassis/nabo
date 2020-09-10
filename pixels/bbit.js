@@ -30,6 +30,9 @@ BBoard=function(w,h,s=8,buf=new Uint8ClampedArray(w*h/8)){
           r+=this.get(i,j)
       return r
     },
+    loadAscii(A){
+      A.match(/0|1/g).map((a,i)=>this.set(~~a,i))
+    },
     views:[],
     addView(v){
       this.views.push(v)
@@ -67,22 +70,9 @@ BBoard=function(w,h,s=8,buf=new Uint8ClampedArray(w*h/8)){
           cmd.redo()
         }
       },
-    },
-    loadAscii(A){
-      A.match(/0|1/g).map((a,i)=>this.set(~~a,i))
     }
   }
-  imgPro=new Proxy(board,{
-    get:function(t1,p){
-      return new Proxy(t1,{
-        get:function(t,q){
-          return t.get(p|0,q|0)
-        }
-      })
-    }
-  })
-  board.image=imgPro
-  Command=function(board){
+  let Command=function(board){
     return{
       Paint:function(v){
         let cmd={
@@ -107,7 +97,7 @@ BBoard=function(w,h,s=8,buf=new Uint8ClampedArray(w*h/8)){
       }
     }
   }
-  View=function(board){
+  let View=function(board){
     return{
       Canvas:function(c){
         x=c.getContext('2d')
@@ -156,7 +146,7 @@ BBoard=function(w,h,s=8,buf=new Uint8ClampedArray(w*h/8)){
       }
     }
   }
-  InputArea=function(board){
+  let InputArea=function(board){
     return{
       Canvas:function(c){
         let cmd=0
@@ -186,6 +176,19 @@ BBoard=function(w,h,s=8,buf=new Uint8ClampedArray(w*h/8)){
       }
     }
   }
+  let imgPro=new Proxy(board,{
+    get(t1,p){
+      return new Proxy(t1,{
+        get(t,q){
+          return t.get(p|0,q|0)
+        },
+        set(t,q,v){
+          return t.set(v,p|0,q|0)
+        }
+      })
+    }
+  })
+  board.image=imgPro
   board.View=View(board)
   board.InputArea=InputArea(board)
   board.Command=Command(board)
