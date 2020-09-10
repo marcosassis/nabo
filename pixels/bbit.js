@@ -1,7 +1,7 @@
 // GPLv3 marcos assis 2020
 
 BBoard=function(w,h,s=8,buf=new Uint8ClampedArray(w*h/8)){
-  board={
+  let board={
     get width(){
       return w
     },
@@ -25,9 +25,10 @@ BBoard=function(w,h,s=8,buf=new Uint8ClampedArray(w*h/8)){
       return o
     },
     toString(byteSep=' ',colSep='\n'){
-      for(i=r='';i<w;++i,r+=colSep)
+      for(i=0,r='';i<w;++i,r+=colSep)
         for(j=0;j<h;++j%8?r:r+=byteSep)
-          r+=this.get(j,i)//TODO:why?
+          //r+=i+" "+j+"  "+this.get(i,j)+"\n"
+          r+=this.get(i,j)
       return r
     },
     views:[],
@@ -69,7 +70,7 @@ BBoard=function(w,h,s=8,buf=new Uint8ClampedArray(w*h/8)){
       },
     },
     loadAscii(A){
-      A.match(/0|1/g).map((a,i)=>this.set(~~a,i%w,i/w|0))
+      A.match(/0|1/g).map((a,i)=>this.set(~~a,i))
     }
   }
   Command=function(board){
@@ -98,8 +99,6 @@ BBoard=function(w,h,s=8,buf=new Uint8ClampedArray(w*h/8)){
     }
   }
   View=function(board){
-    function printBoard(){
-    }
     return{
       Canvas:function(c){
         x=c.getContext('2d')
@@ -112,12 +111,14 @@ BBoard=function(w,h,s=8,buf=new Uint8ClampedArray(w*h/8)){
           board,
           drawPixel(v,p,q){
             x.fillStyle=v?"#000":"#fff"
-            x.fillRect(p,q,1,1)
+            x.fillRect(q,p,1,1)
           },
           draw(){
-            for(i=w;i--;)
-              for(j=h;j--;)
+            r=''
+            for(i=w;i--;r+="\n")
+              for(j=h;j--;r+=i+" "+j+"\t")
                 this.drawPixel(board.get(i,j),i,j)
+            console.log(r)
           }
         }
         board.addView(cv)
@@ -157,10 +158,11 @@ BBoard=function(w,h,s=8,buf=new Uint8ClampedArray(w*h/8)){
           r=c.getBoundingClientRect()
           X=(e.x-r.left)*c.width/c.clientWidth|0
           Y=(e.y-r.top)*c.height/c.clientHeight|0
-          cmd.add(X,Y)
+          cmd.add(Y,X)
+          console.log(X+" "+Y)
         }
         c.onmouseup=c.onblur=e=>{
-          cmd.do()
+          cmd&&cmd.do()
           cmd=0
         }
         document.onkeydown=e=>{
