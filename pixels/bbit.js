@@ -1,16 +1,12 @@
 // GPLv3 marcos assis 2020
 
 BBoard=function(w,h,buf=new Uint8ClampedArray(w*h/8)){
-  //if(!buf)buf=new Array(h).map(new Uint8ClampedArray(w/8))
   let board={
     get width(){
       return w
     },
     get height(){
       return h
-    },
-    get pixelSize(){
-      return s
     },
     get buffer(){
       return buf
@@ -192,19 +188,6 @@ BBoard=function(w,h,buf=new Uint8ClampedArray(w*h/8)){
       }
     }
   }
-  let imgPro=new Proxy(board,{
-    get(t1,i){
-      return new Proxy(t1,{
-        get(t,j){
-          return t.get(i|0,j|0)
-        },
-        set(t,j,v){
-          return t.set(v,i|0,j|0)
-        }
-      })
-    }
-  })
-  board.image=imgPro
   board.View=View(board)
   board.InputArea=InputArea(board)
   board.Command=Command(board)
@@ -282,8 +265,6 @@ b1.View.Canvas(c)
 b1.View.ConsoleLog()
 b1.InputArea.Canvas(c)
 b1.loadAscii(robrot)
-b1.set(1,2,4)
-b1.image[2][4]=0
 b1.draw()
 
 console.log(robrot.replace(/0/g,' '))
