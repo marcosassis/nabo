@@ -1,7 +1,7 @@
 // GPLv3 marcos assis 2020
 
-BBoard=function(w,h,buf=new Uint8ClampedArray(w*h/8)){
-  //if(!buf)buf=new Array(h).map(new Uint8ClampedArray(w/8))
+BBoard=function(w,h,buf){
+  if(!buf)buf=[...Array(h)].map(_=>new Uint8ClampedArray(w>>3))
   let board={
     get width(){
       return w
@@ -16,14 +16,26 @@ BBoard=function(w,h,buf=new Uint8ClampedArray(w*h/8)){
       return buf
     },
     get(i,j){
-      let p=j===undefined?i:i*w+j
-      return buf[p/8|0]>>p%8&1 // TODO check endianness
+      if(j===undefined){
+        j=i%w
+        i=i/w|0
+      }
+      return buf[i][j>>3]>>j%8&1
+      //let p=j===undefined?i:i*w+j
+      //return buf[p/8|0]>>p%8&1 // TODO check endianness
     },
     set(v,i,j){
-      let p=j===undefined?i:i*w+j
-      o=this.get(p)
-      v^o?buf[p/8|0]^=1<<p%8:0
+      if(j===undefined){
+        j=i%w
+        i=i/w|0
+      }
+      o=this.get(i,j)
+      v^o?buf[i][j>>3]^=1<<j%8:0
       return o
+      // let p=j===undefined?i:i*w+j
+      // o=this.get(p)
+      // v^o?buf[p/8|0]^=1<<p%8:0
+      // return o
     },
     resize(wi,he){
       if(wi==w&&he==h)return
@@ -263,17 +275,17 @@ robrot = `\
 
 
 b1=BBoard(48,48)
-b2=BBoard(32,32)
-b3=new BBoard(47,42)
-b4=new BBoard(16,16)
+// b2=BBoard(32,32)
+// b3=new BBoard(47,42)
+// b4=new BBoard(16,16)
 
-b3.set(1,2,14)
-v3=new b3.View.ConsoleLog()
-b3.loadAscii(robrot)
-v3.draw=function(){
-  console.log(this.board.toString().replace(/1/g,'_')) 
-}
-b3.draw()
+// b3.set(1,2,14)
+// v3=new b3.View.ConsoleLog()
+// b3.loadAscii(robrot)
+// v3.draw=function(){
+//   console.log(this.board.toString().replace(/1/g,'_')) 
+// }
+// b3.draw()
 
 b1.View.Canvas(c)
 b1.View.ConsoleLog()
