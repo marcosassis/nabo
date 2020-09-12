@@ -1,6 +1,7 @@
 // GPLv3 marcos assis 2020
 
-BBoard=function(w,h,s=8,buf=new Uint8ClampedArray(w*h/8)){
+BBoard=function(w,h,buf=new Uint8ClampedArray(w*h/8)){
+  //if(!buf)buf=new Array(h).map(new Uint8ClampedArray(w/8))
   let board={
     get width(){
       return w
@@ -14,15 +15,24 @@ BBoard=function(w,h,s=8,buf=new Uint8ClampedArray(w*h/8)){
     get buffer(){
       return buf
     },
-    get(p,q){
-      a=q===undefined?p:p*w+q
-      return buf[a/8|0]>>a%8&1
+    get(i,j){
+      let p=j===undefined?i:i*w+j
+      return buf[p/8|0]>>p%8&1 // TODO check endianness
     },
-    set(v,p,q){
-      a=q===undefined?p:p*w+q
-      o=this.get(a)
-      v^o?buf[a/8|0]^=1<<a%8:0
+    set(v,i,j){
+      let p=j===undefined?i:i*w+j
+      o=this.get(p)
+      v^o?buf[p/8|0]^=1<<p%8:0
       return o
+    },
+    resize(wi,he){
+      if(wi==w&&he==h)return
+      buf2=new Uint8ClampedArray(wi*he/8)
+      for(i=he<h?he:h;i--;)
+        for(j=wi<w?wi:w;j--;buf2[p/8|0]|=this.get(i,j)<<p%8)
+          p=i*wi+j;
+      [buf,w,h]=[buf2,wi,he]
+      this.draw()
     },
     toString(byteSep=' ',colSep='\n'){
       for(i=0,r='';i<h;++i,r+=colSep)
@@ -38,11 +48,11 @@ BBoard=function(w,h,s=8,buf=new Uint8ClampedArray(w*h/8)){
       this.views.push(v)
     },
     draw(){
-      this.views.map(a=>a.draw())
+      this.views.map(v=>v.draw())
     },
-    setDrawPixel(v,p,q){
-      o=this.set(v,p,q)
-      v^o&&this.views.map(a=>a.drawPixel(v,p,q))
+    setDrawPixel(v,i,j){
+      o=this.set(v,i,j)
+      v^o&&this.views.map(a=>a.drawPixel(v,i,j))
       return o
     },
     history:{
@@ -79,8 +89,8 @@ BBoard=function(w,h,s=8,buf=new Uint8ClampedArray(w*h/8)){
           board,
           v,
           pxList:[],
-          add(p,q){
-            board.setDrawPixel(v,p,q)^v&&this.pxList.push(p*w+q)
+          add(i,j){
+            board.setDrawPixel(v+0,i,j)^v&&this.pxList.push(i*w+j)
           },
           do(){
             if(this.pxList.length==0)board.history.removeLast()
@@ -97,25 +107,29 @@ BBoard=function(w,h,s=8,buf=new Uint8ClampedArray(w*h/8)){
       }
     }
   }
-  let View=function(board){
+  let View=function(bo){
     return{
-      Canvas:function(c){
+      Canvas:function(c,s=8){
         x=c.getContext('2d')
-        c.width=w
-        c.height=h
-        c.style.width=w*s+"px"
-        c.style.height=h*s+"px"
+        resize=function(){
+          c.width=w
+          c.height=h
+          c.style.width=w*s+"px"
+          c.style.height=h*s+"px"
+        }
         cv={
           c,
-          board,
-          drawPixel(v,p,q){
+          board:bo,
+          resize,
+          drawPixel(v,i,j){
             x.fillStyle=v?"#000":"#fff"
-            x.fillRect(q,p,1,1)
+            x.fillRect(j,i,1,1)
           },
           draw(){
+            this.resize()
             for(i=h;i--;)
               for(j=w;j--;)
-                this.drawPixel(board.get(i,j),i,j)
+                this.drawPixel(bo.get(i,j),i,j)
           }
         }
         board.addView(cv)
@@ -124,8 +138,8 @@ BBoard=function(w,h,s=8,buf=new Uint8ClampedArray(w*h/8)){
       ConsoleLog:function(){
         cl={
           board,
-          drawPixel(v,p,q){
-            console.log(p+' '+q+' : '+v)
+          drawPixel(v,i,j){
+            console.log(i+' '+j+' : '+v)
           },
           draw(){
             console.log(board.toString())
@@ -161,6 +175,9 @@ BBoard=function(w,h,s=8,buf=new Uint8ClampedArray(w*h/8)){
           cmd&&cmd.do()
           cmd=0
         }
+        c.ondblclick=e=>{
+          board.draw()
+        }
         document.onkeydown=e=>{
           cmd=0
           if(e.ctrlKey)
@@ -173,13 +190,13 @@ BBoard=function(w,h,s=8,buf=new Uint8ClampedArray(w*h/8)){
     }
   }
   let imgPro=new Proxy(board,{
-    get(t1,p){
+    get(t1,i){
       return new Proxy(t1,{
-        get(t,q){
-          return t.get(p|0,q|0)
+        get(t,j){
+          return t.get(i|0,j|0)
         },
-        set(t,q,v){
-          return t.set(v,p|0,q|0)
+        set(t,j,v){
+          return t.set(v,i|0,j|0)
         }
       })
     }
@@ -254,10 +271,9 @@ b3.set(1,2,14)
 v3=new b3.View.ConsoleLog()
 b3.loadAscii(robrot)
 v3.draw=function(){
-  console.log("a modified View draws:")
-  console.log(this.board.toString().replace(/0/g,'_')) 
+  console.log(this.board.toString().replace(/1/g,'_')) 
 }
-//b3.draw()
+b3.draw()
 
 b1.View.Canvas(c)
 b1.View.ConsoleLog()
